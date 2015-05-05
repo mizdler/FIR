@@ -1,0 +1,115 @@
+dp fir(out result : ns(32)) {
+	reg r0,r1,r2,r3,r4 : ns(8);
+	lookup b : ns(16) = {0b1111010011000010, 0b0000001010001001, 0b0000001000111101, 0b0000000111110110, 0b0000000110110100};
+	reg z,sum,t : ns(32);
+	reg x : ns(16);
+	reg y : ns(8);
+	reg signal : ns(8);
+
+	sfg p0{
+		x=b(0);
+		y=r0;
+	}
+	sfg p1{
+		x=b(1);
+		y=r1;
+	}
+	sfg p2{
+		x=b(2);
+		y=r2;
+	}
+	sfg p3{
+		x=b(3);
+		y=r3;
+	}
+	sfg p4{
+		x=b(4);
+		y=r4;
+	}
+
+	sfg multiply{
+		z=x*y;
+		t=t+1;
+	}	
+	sfg add{
+		sum=sum+z;	
+	}
+	sfg al{
+		result=0;
+	}
+
+	sfg shift{
+		r0=signal;
+		r1=r0;
+		r2=r1;
+		r3=r2;
+		r4=r3;
+		
+		result=sum;
+		$display("Cycle ", $cycle, ": output = ",$dec, result);		
+	}
+
+	sfg init{
+		r0=signal;
+		r1=r0;
+		r2=r1;
+		r3=r2;
+		r4=r3;
+	}
+
+	sfg clear{
+		result=0;
+		sum=0;
+		t=0;
+	}
+
+	lookup n : ns(8) = {
+			0b00000001,
+			0b00001011,
+			0b00010100,
+			0b00011100,
+			0b00100100,
+			0b00101100,
+			0b00110010,
+			0b00111000,
+			0b00111100,
+			0b00111111,
+			0b01000001,
+			0b01000010,
+			0b01000001,
+			0b00111111,
+			0b00111100,
+			0b00111100
+			};
+	reg i : ns(4);
+	sfg next{
+		signal = n(i);
+		i=i+1;
+	}
+
+}
+
+fsm f_fir(fir){
+	initial sx;
+	state sel,s0,s1,m,a;
+	
+	@sx (next, al) -> s0;
+	@s0 (next, shift) -> s1;
+	@s1 (clear) -> sel;
+
+	@sel if(t==0) then (p0, al) -> m;
+		else if(t==1) then (p1, al) -> m;
+		else if(t==2) then (p2, al) -> m;
+		else if(t==3) then (p3, al) -> m;
+		else if(t==4) then (p4, al) -> m;
+		else (al) -> s0;
+
+	@m (multiply, al) -> a;
+	@a (add, al) -> sel;
+
+}
+
+
+system S {
+	fir;
+}

@@ -1,0 +1,53 @@
+dp fir(in signal : ns(8); out result : ns(32)) {
+	reg r0,r1,r2,r3,r4 : ns(8);
+	lookup b : ns(16) = {0b1111010011000010, 0b0000001010001001, 0b0000001000111101, 0b0000000111110110, 0b0000000110110100};
+
+
+	always {
+		result = r0*b(0) + r1*b(1) + r2*b(2) + r3*b(3) + r4*b(4);
+		r0=signal;
+		r1=r0;
+		r2=r1;
+		r3=r2;
+		r4=r3;
+		
+		$display("Cycle ", $cycle, ": output = ", $dec, result);
+	}
+}
+
+dp signalGenerator(out signal : ns(8)){
+	lookup n : ns(8) = {
+			0b00000001,
+			0b00001011,
+			0b00010100,
+			0b00011100,
+			0b00100100,
+			0b00101100,
+			0b00110010,
+			0b00111000,
+			0b00111100,
+			0b00111111,
+			0b01000001,
+			0b01000010,
+			0b01000001,
+			0b00111111,
+			0b00111100,
+			0b00111100
+			};
+	reg i : ns(4);
+	always{
+		signal = n(i);
+		i=i+1;
+	}
+}
+
+dp all{
+	sig signal : ns(8);
+	sig result : ns(32);
+	use signalGenerator(signal);
+	use fir(signal, result);
+}
+
+system S {
+	all;
+}
